@@ -47,34 +47,23 @@ static inline void moveDown(Node** current)
 
 static bool moveCursor(int keyDirection, Node** current)
 {
-	short x = 0, y = 0;
-
-	if (!getCursor(&x, &y))
-		return false;
-
 	switch (keyDirection)
 	{
 	case VK_LEFT:
 		moveLeft(current);
-		--x;
 		break;
 	case VK_RIGHT:
 		moveRight(current);
-		++x;
 		break;
 	case VK_UP:
 		moveUp(current);
-		--y;
 		break;
 	case VK_DOWN:
 		moveDown(current);
-		++y;
 		break;
 	default:
 		return false;
 	}
-
-	setCursor(x, y);
 	return true;
 }
 
@@ -88,11 +77,20 @@ static bool editText(
 	Node *node = *current ? nodeData->pool[getFreeNode(nodeData)] : head;
 	if (!node)
 		return false;
+
+	character = cleanCarriage(character);
 	node->character = character;
+
 	if (!getCursor(&node->x, &node->y)) {
 		node->inUse = false;
 		return false;
 	}
+
+	if (node->character == '\n' && (*current)) {
+		node->x = (*current)->prev->x + 1;
+		node->x = (*current)->prev->y;
+	}
+
 	node->character = character;
 	character != BACKSPACE ? add(current, node) : erase(current, node);
 	return true;
@@ -112,8 +110,6 @@ int edit(void) {
 	while (character != ESCAPE) {
 		if (!read(&character, &isVk))
 			continue;
-		
-		character = cleanCarriage(character);
 
 		keyProcessResult = isVk ?
 			moveCursor((int)character, &current) :
