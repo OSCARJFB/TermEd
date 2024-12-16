@@ -8,14 +8,22 @@ static void updateCursor(Node* current)
 		current->character == ESCAPE ? current->y - 1 : 
 		current->y;
 
+	if (current->character == TAB)
+		x = onTab(current->x);
+
 	setCursor(x, y);
 }
 
 static void writeText(Node *head)
 {
 	clear();
-	for (Node* node = head; node; node = node->next)
-		write(node->character);
+	for (Node* node = head; node; node = node->next) {
+		if (node->character == TAB)
+			for (int i = 0; i < 8; ++i)
+				write(SPACE);
+		else 
+			write(node->character);
+	}
 }
 
 static inline void moveLeft(Node** current)
@@ -86,7 +94,7 @@ static bool editText(
 		return false;
 	}
 
-	if (node->character == '\n' && (*current)) {
+	if (node->character == NEWLINE && (*current)) {
 		node->x = (*current)->prev->x + 1;
 		node->x = (*current)->prev->y;
 	}
